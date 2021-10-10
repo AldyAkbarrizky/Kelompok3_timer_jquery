@@ -1,0 +1,22 @@
+{
+  "name": "stopwatch",
+  "version": "1.0.0",
+  "description": "Aplikasi The Timer God Only Knows untuk Mata Kuliah Web Development",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app"
+  },
+  "repository": {
+    "type": "git",
+    "url": "(https://github.com/AldyAkbarrizky/Kelompok3_timer_jquery.git)"
+  },
+  "author": "Kelompok 3 Webdev P JTK Polban (2021-2022)",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.6",
+    "express": "^4.17.1",
+    "path": "^0.12.7",
+    "pg": "^8.7.1"
+  }
+}
