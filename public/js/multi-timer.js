@@ -5,7 +5,7 @@ if(!tot_timer) {
 }
 var timer_cont = document.getElementById("main-cont");
 
-for (var i = 1; i <= tot_timer; i++) {
+for (var i = 0; i < tot_timer; i++) {
     console.log(i);
     var timer = new Timer({id: 'timer-' + i});
     timer.setAttribute('id', 'timer-' + i);

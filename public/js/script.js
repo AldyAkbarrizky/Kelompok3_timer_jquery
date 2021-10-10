@@ -88,6 +88,7 @@ class Timer extends HTMLElement {
                     this.recordText.innerHTML = loadData.record;
                     this.counter=loadData.counter;
                     this.prevLap=loadData.prevLap;
+                    this.state= loadData.state;
                     this.start();
                     break
                 case "paused":
@@ -95,6 +96,7 @@ class Timer extends HTMLElement {
                     this.recordText.innerHTML = loadData.record;
                     this.counter=loadData.counter;
                     this.prevLap=loadData.prevLap;
+                    this.state= loadData.state;
                     this.pause();
                     break
                 case "stopped":
@@ -241,8 +243,9 @@ function addNewTimer() {
 
 function resetAllTimer() {
     var tot_timer = parseInt(localStorage.getItem("tot_timer"));
+    console.log(tot_timer);
     for (var i = 0; i < tot_timer; i++) {
-        console.log(i);
+        console.log("Nomor " + i);
         document.getElementById('timer-' + i).remove();
         localStorage.clear();
 
