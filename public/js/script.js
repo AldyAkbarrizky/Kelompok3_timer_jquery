@@ -231,7 +231,7 @@ class Timer extends HTMLElement {
     }
 }
 
-function addNewTimer() {
+$( "#add-btn" ).click(function() {
     var tot_timer = parseInt(localStorage.getItem("tot_timer"));
     if(!tot_timer) tot_timer = 0;
     console.log(tot_timer);
@@ -239,17 +239,16 @@ function addNewTimer() {
     timer.setAttribute('id', 'timer-' + tot_timer);
     document.getElementById('main-cont').appendChild(timer);
     localStorage.setItem("tot_timer", tot_timer + 1);
-}
+});
 
-function resetAllTimer() {
+$( "#clear-btn" ).click(function() {
     var tot_timer = parseInt(localStorage.getItem("tot_timer"));
     console.log(tot_timer);
     for (var i = 0; i < tot_timer; i++) {
         console.log("Nomor " + i);
         document.getElementById('timer-' + i).remove();
         localStorage.clear();
-
     }
-}
+});
 
 window.customElements.define("the-timer", Timer)

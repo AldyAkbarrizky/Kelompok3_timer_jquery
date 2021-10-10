@@ -141,6 +141,6 @@ the-timer::part(record-text) {
 the-timer::part(my-30) {
     margin: 30px 0; }
 
-#reset-btn {
+#clear-btn {
     width: 120px;
 }
