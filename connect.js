@@ -1,16 +1,17 @@
 const {Client} = require('pg')
 const client = new Client({
-    user: "postgres",
-    password: "1234567890",
-    host: "localhost",
+    user: "twqfiaoc",
+    password: "s1tQGfOrWtqZhJU5oe1q9PTgCzCXevAL",
+    host: "satao.db.elephantsql.com",
     port: 5432,
-    database: "timer"
+    database: "twqfiaoc"
 })
 
-client.connect()
-.then(() => console.log("Sukses connect mantab"))
-.then(() => client.query("INSERT INTO public.test VALUES($1, $2)", [2, 'Afdal Ramdan Daman Huri']))
-.then(() => client.query("SELECT * from test"))
-.then(results => console.table(results.rows))
-.catch(e => console.log(e))
-.finally(() => client.end())
+module.exports = client
+
+// client.connect()
+// .then(() => console.log("Sukses connect mantab"))
+// .then(() => client.query("SELECT * from test"))
+// .then(results => console.table(results.rows))
+// .catch(e => console.log(e))
+// .finally(() => client.end())

@@ -65,6 +65,27 @@ class Timer extends HTMLElement {
             prevLap: this.prevLap
         }));
 
+        var formData = {
+            id: 3,
+            name: "Naufal Habib Hakim"
+        }
+
+        $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: window.location + "add-timer",
+            data: JSON.stringify(formData),
+            dataType: 'json',
+            success: function(user) {
+                alert("Post Success!");
+                console.log(user)
+            },
+            error: function(e) {
+				alert("Error!")
+				console.log("ERROR: ", e);
+			}
+        });
+
         return;
     }
 
@@ -74,6 +95,31 @@ class Timer extends HTMLElement {
         //     tot_timer = 0;
         //     localStorage.setItem("tot_timer", tot_timer);
         // }
+        var user = "Aldy";
+        $.get("timer", {user:user}, function(data, status) {
+            alert("User Database: " + data)
+        });
+
+        // var formData = {
+        //     id: 3,
+        //     name: "Naufal Habib Hakim"
+        // }
+
+        // $.ajax({
+        //     type: "POST",
+        //     contentType: "application/json",
+        //     url: window.location + "add-timer",
+        //     data: JSON.stringify(formData),
+        //     dataType: 'json',
+        //     success: function(user) {
+        //         alert("Post Success!");
+        //         console.log(user)
+        //     },
+        //     error: function(e) {
+		// 		alert("Error!")
+		// 		console.log("ERROR: ", e);
+		// 	}
+        // });
 
         if(this.timerID) {
             const loadData = JSON.parse(localStorage.getItem("saveData-" + this.timerID));
