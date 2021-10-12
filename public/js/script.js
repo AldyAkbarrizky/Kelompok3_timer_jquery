@@ -7,8 +7,6 @@ class Timer extends HTMLElement {
     constructor(props) {
         super(props)
 
-        console.log(props);
-
         this.attachShadow({ mode: "open" })
 
         this.shadowRoot.innerHTML = `
@@ -49,11 +47,8 @@ class Timer extends HTMLElement {
         this.elapsedTime = 0;
         this.timerInterval;
         this.counter = 1;
-        this.prevLap;
+        this.prevLap = 0;
         this.state = "stopped";
-
-        console.log(localStorage.getItem("saveData-" + props.id));
-
         window.addEventListener("beforeunload", (event) => this.save(event));
         this.load();
     }
@@ -61,15 +56,15 @@ class Timer extends HTMLElement {
     save(event) {
         event.preventDefault();
 
-        localStorage.setItem("saveData-" + this.timerID, JSON.stringify({
-            id: this.timerID,
-            state: this.state,
-            savedTime: this.elapsedTime,
-            record: this.recordText.innerHTML,
-            timeClosed: Date.now(),
-            counter: this.counter,
-            prevLap: this.prevLap
-        }));
+        // localStorage.setItem("saveData-" + this.timerID, JSON.stringify({
+        //     id: this.timerID,
+        //     state: this.state,
+        //     savedTime: this.elapsedTime,
+        //     record: this.recordText.innerHTML,
+        //     timeClosed: Date.now(),
+        //     counter: this.counter,
+        //     prevLap: this.prevLap
+        // }));
 
         // var formData = {
         //     id: 3,
@@ -94,11 +89,9 @@ class Timer extends HTMLElement {
             dataType: 'json',
             success: function (user) {
                 alert("Post Success!");
-                console.log(user)
             },
             error: function (e) {
                 alert("Error!")
-                console.log("ERROR: ", e);
             }
         });
 
@@ -106,6 +99,7 @@ class Timer extends HTMLElement {
     }
 
     load() {
+        var this_timer = this;
         timer_tot = parseInt(localStorage.getItem("tot_timer"));
         // if(tot_timer === null) {
         //     tot_timer = 0;
@@ -114,10 +108,9 @@ class Timer extends HTMLElement {
         // var user = "Aldy";
         var user = this.timerID;
         $.get("timer", { user: user }, function (data, status) {
+
             // alert("User Database: " + data)
-            console.log(data);
             var id = parseInt(user.charAt(6));
-            console.log(Array.isArray(data));
             if (Array.isArray(data)) {
                 preload_data = data;
                 flag = true;
@@ -125,35 +118,39 @@ class Timer extends HTMLElement {
 
             waitFor(_ => flag === true)
                 .then(_ => console.log("preload_data is ready"));
+
+            console.log(preload_data);
             
             //start load data
             const loadData = preload_data[id];
 
             if (!loadData) return;
 
-            this.elapsedTime = loadData.savedTime;
+            if (loadData.state === null) return;
+
+            this_timer.elapsedTime = parseInt(loadData.savedtime);
 
             switch (loadData.state) {
                 case "started":
-                    this.elapsedTime += (Date.now() - loadData.timeClosed);
-                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
-                    this.recordText.innerHTML = loadData.record;
-                    this.counter = loadData.counter;
-                    this.prevLap = loadData.prevLap;
-                    this.state = loadData.state;
-                    this.start();
+                    this_timer.elapsedTime += (Date.now() - loadData.closedtime);
+                    this_timer.timerText.innerHTML = this_timer.timeToString(this_timer.elapsedTime);
+                    this_timer.recordText.innerHTML = loadData.lap_string;
+                    this_timer.counter = loadData.counter;
+                    this_timer.prevLap = loadData.prev_lap;
+                    this_timer.state = loadData.state;
+                    this_timer.start();
                     break
                 case "paused":
-                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
-                    this.recordText.innerHTML = loadData.record;
-                    this.counter = loadData.counter;
-                    this.prevLap = loadData.prevLap;
-                    this.state = loadData.state;
-                    this.pause();
+                    this_timer.timerText.innerHTML = this_timer.timeToString(this_timer.elapsedTime);
+                    this_timer.recordText.innerHTML = loadData.lap_string;
+                    this_timer.counter = loadData.counter;
+                    this_timer.prevLap = loadData.prev_lap;
+                    this_timer.state = loadData.state;
+                    this_timer.pause();
                     break
                 case "stopped":
-                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
-                    this.recordText.innerHTML = "Time <br/>";
+                    this_timer.timerText.innerHTML = this_timer.timeToString(this_timer.elapsedTime);
+                    this_timer.recordText.innerHTML = "Time <br/>";
                     break
             }
         });
@@ -257,6 +254,7 @@ class Timer extends HTMLElement {
     }
 
     start() {
+        console.log(this.elapsedTime);
         this.startTime = Date.now() - this.elapsedTime
         if (this.state == "stopped") {
             this.counter = 1;
@@ -337,23 +335,57 @@ class Timer extends HTMLElement {
 }
 
 $("#add-btn").click(function () {
-    tot_timer = parseInt(localStorage.getItem("tot_timer"));
-    if (!tot_timer) tot_timer = 0;
-    console.log(tot_timer);
-    var timer = new Timer({ id: 'timer-' + tot_timer });
-    timer.setAttribute('id', 'timer-' + tot_timer);
-    document.getElementById('main-cont').appendChild(timer);
-    localStorage.setItem("tot_timer", tot_timer + 1);
+    $.get("count-timer", function (data, status) {
+        tot_timer = parseInt(data)
+        if (!tot_timer) tot_timer = 0;
+
+        if (tot_timer === 3) {
+            alert("Timer sudah mencapai batas maksimum")
+        } else {
+            var timerData = {
+                timer_id: "timer-" + tot_timer
+            }
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: window.location + "new-timer",
+                data: JSON.stringify(timerData),
+                dataType: 'json',
+                success: function(data) {
+                    var timer = new Timer({ id: 'timer-' + tot_timer });
+                    timer.setAttribute('id', 'timer-' + tot_timer);
+                    $("#main-cont").append(timer);
+                },
+                error: function(e) {
+                    alert("Error!")
+                }
+            })
+        }
+    })
+    // tot_timer = parseInt(localStorage.getItem("tot_timer"));
+    // if (!tot_timer) tot_timer = 0;
+    // console.log(tot_timer);
+    // var timer = new Timer({ id: 'timer-' + tot_timer });
+    // timer.setAttribute('id', 'timer-' + tot_timer);
+    // document.getElementById('main-cont').appendChild(timer);
+    // localStorage.setItem("tot_timer", tot_timer + 1);
 });
 
 $("#clear-btn").click(function () {
-    tot_timer = parseInt(localStorage.getItem("tot_timer"));
-    console.log(tot_timer);
-    for (var i = 0; i < tot_timer; i++) {
-        console.log("Nomor " + i);
-        document.getElementById('timer-' + i).remove();
-        localStorage.clear();
-    }
+    $.get("count-timer", function (data, status) {
+        tot_timer = parseInt(data)
+
+        $.ajax({
+            type: 'DELETE',
+            url: window.location + "delete-all",
+            success: function(data) {
+                for (var i = 0; i < tot_timer; i++) {
+                   //$('#timer-' + tot_timer).remove();
+                   document.getElementById('timer-' + i).remove();
+                }
+            }
+        })
+    })
 });
 
 function waitFor(conditionFunction) {
