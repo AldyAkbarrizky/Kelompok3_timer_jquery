@@ -1,3 +1,8 @@
+var timer_tot;
+var timer_data;
+var preload_data;
+var flag = false;
+
 class Timer extends HTMLElement {
     constructor(props) {
         super(props)
@@ -57,6 +62,7 @@ class Timer extends HTMLElement {
         event.preventDefault();
 
         localStorage.setItem("saveData-" + this.timerID, JSON.stringify({
+            id: this.timerID,
             state: this.state,
             savedTime: this.elapsedTime,
             record: this.recordText.innerHTML,
@@ -65,9 +71,19 @@ class Timer extends HTMLElement {
             prevLap: this.prevLap
         }));
 
+        // var formData = {
+        //     id: 3,
+        //     name: "Naufal Habib Hakim"
+        // }
         var formData = {
-            id: 3,
-            name: "Naufal Habib Hakim"
+            timer_tot: timer_tot,
+            id: this.timerID,
+            state: this.state,
+            savedTime: this.elapsedTime,
+            record: this.recordText.innerHTML,
+            timeClosed: Date.now(),
+            counter: this.counter,
+            prevLap: this.prevLap
         }
 
         $.ajax({
@@ -76,28 +92,70 @@ class Timer extends HTMLElement {
             url: window.location + "add-timer",
             data: JSON.stringify(formData),
             dataType: 'json',
-            success: function(user) {
+            success: function (user) {
                 alert("Post Success!");
                 console.log(user)
             },
-            error: function(e) {
-				alert("Error!")
-				console.log("ERROR: ", e);
-			}
+            error: function (e) {
+                alert("Error!")
+                console.log("ERROR: ", e);
+            }
         });
 
         return;
     }
 
     load() {
-        // var tot_timer = parseInt(localStorage.getItem("tot_timer"));
+        timer_tot = parseInt(localStorage.getItem("tot_timer"));
         // if(tot_timer === null) {
         //     tot_timer = 0;
         //     localStorage.setItem("tot_timer", tot_timer);
         // }
-        var user = "Aldy";
-        $.get("timer", {user:user}, function(data, status) {
-            alert("User Database: " + data)
+        // var user = "Aldy";
+        var user = this.timerID;
+        $.get("timer", { user: user }, function (data, status) {
+            // alert("User Database: " + data)
+            console.log(data);
+            var id = parseInt(user.charAt(6));
+            console.log(Array.isArray(data));
+            if (Array.isArray(data)) {
+                preload_data = data;
+                flag = true;
+            }
+
+            waitFor(_ => flag === true)
+                .then(_ => console.log("preload_data is ready"));
+            
+            //start load data
+            const loadData = preload_data[id];
+
+            if (!loadData) return;
+
+            this.elapsedTime = loadData.savedTime;
+
+            switch (loadData.state) {
+                case "started":
+                    this.elapsedTime += (Date.now() - loadData.timeClosed);
+                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
+                    this.recordText.innerHTML = loadData.record;
+                    this.counter = loadData.counter;
+                    this.prevLap = loadData.prevLap;
+                    this.state = loadData.state;
+                    this.start();
+                    break
+                case "paused":
+                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
+                    this.recordText.innerHTML = loadData.record;
+                    this.counter = loadData.counter;
+                    this.prevLap = loadData.prevLap;
+                    this.state = loadData.state;
+                    this.pause();
+                    break
+                case "stopped":
+                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
+                    this.recordText.innerHTML = "Time <br/>";
+                    break
+            }
         });
 
         // var formData = {
@@ -116,81 +174,81 @@ class Timer extends HTMLElement {
         //         console.log(user)
         //     },
         //     error: function(e) {
-		// 		alert("Error!")
-		// 		console.log("ERROR: ", e);
-		// 	}
+        // 		alert("Error!")
+        // 		console.log("ERROR: ", e);
+        // 	}
         // });
 
-        if(this.timerID) {
-            const loadData = JSON.parse(localStorage.getItem("saveData-" + this.timerID));
-            if(!loadData) return;
+        // if (this.timerID) {
+        //     const loadData = JSON.parse(localStorage.getItem("saveData-" + this.timerID));
+        //     if (!loadData) return;
 
-            this.elapsedTime = loadData.savedTime;
-            
-            switch(loadData.state) {
-                case "started":
-                    this.elapsedTime += (Date.now() - loadData.timeClosed);
-                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
-                    this.recordText.innerHTML = loadData.record;
-                    this.counter=loadData.counter;
-                    this.prevLap=loadData.prevLap;
-                    this.state= loadData.state;
-                    this.start();
-                    break
-                case "paused":
-                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
-                    this.recordText.innerHTML = loadData.record;
-                    this.counter=loadData.counter;
-                    this.prevLap=loadData.prevLap;
-                    this.state= loadData.state;
-                    this.pause();
-                    break
-                case "stopped":
-                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
-                    this.recordText.innerHTML = "Time <br/>";
-                    break
-            }
-        }
+        //     this.elapsedTime = loadData.savedTime;
+
+        //     switch (loadData.state) {
+        //         case "started":
+        //             this.elapsedTime += (Date.now() - loadData.timeClosed);
+        //             this.timerText.innerHTML = this.timeToString(this.elapsedTime);
+        //             this.recordText.innerHTML = loadData.record;
+        //             this.counter = loadData.counter;
+        //             this.prevLap = loadData.prevLap;
+        //             this.state = loadData.state;
+        //             this.start();
+        //             break
+        //         case "paused":
+        //             this.timerText.innerHTML = this.timeToString(this.elapsedTime);
+        //             this.recordText.innerHTML = loadData.record;
+        //             this.counter = loadData.counter;
+        //             this.prevLap = loadData.prevLap;
+        //             this.state = loadData.state;
+        //             this.pause();
+        //             break
+        //         case "stopped":
+        //             this.timerText.innerHTML = this.timeToString(this.elapsedTime);
+        //             this.recordText.innerHTML = "Time <br/>";
+        //             break
+        //     }
+        // }
     }
 
     timeToString(time) {
         let diffInHrs = time / 3600000;
         let hh = Math.floor(diffInHrs);
-    
+
         let diffInMin = (diffInHrs - hh) * 60;
         let mm = Math.floor(diffInMin);
-    
+
         let diffInSec = (diffInMin - mm) * 60;
         let ss = Math.floor(diffInSec);
-    
+
         let diffInMs = (diffInSec - ss) * 100;
         let ms = Math.floor(diffInMs);
-    
+
         let formattedHH = hh.toString().padStart(2, "0");
         let formattedMM = mm.toString().padStart(2, "0");
         let formattedSS = ss.toString().padStart(2, "0");
         let formattedMS = ms.toString().padStart(2, "0");
-    
+
         return `${formattedHH}:${formattedMM}:${formattedSS}:${formattedMS}`;
     }
 
-    printResult(hour, minutes, seconds) {  
+    printResult(hour, minutes, seconds) {
         let txt = "";
         if (hour != "00") {
             var hourTime = parseInt(hour);
             if (hourTime >= 24) {
                 var day = parseInt(hourTime / 24);
                 hourTime = hourTime - (day * 24);
-                txt = day + " hari " + hourTime + " jam " + minutes + " menit " + seconds + " detik ";            
+                txt = day + " hari " + hourTime + " jam " + minutes + " menit " + seconds + " detik ";
             }
             else {
                 txt = hour + " jam " + minutes + " menit " + seconds + " detik ";
-            }        
+            }
         }
-        else if (minutes != "00")  {
+        else if (minutes != "00") {
             txt = minutes + " menit " + seconds + " detik ";
         }
-        else if (seconds != "00")  {
+        else if (seconds != "00") {
             txt = seconds + " detik ";
         } else {
             txt = "0 detik"
@@ -199,11 +257,12 @@ class Timer extends HTMLElement {
     }
 
     start() {
-        if(this.state == "stopped") {
+        this.startTime = Date.now() - this.elapsedTime
+        if (this.state == "stopped") {
             this.counter = 1;
             this.recordText.innerHTML = "Time <br/>";
+            this.prevLap = this.startTime;
         }
-        this.startTime = Date.now() - this.elapsedTime
         this.timerInterval = setInterval(() => {
             this.elapsedTime = Date.now() - this.startTime;
             this.timerText.innerHTML = this.timeToString(this.elapsedTime);
@@ -262,10 +321,10 @@ class Timer extends HTMLElement {
     }
 
     lap() {
-        
+
         const currTime = this.startTime - this.elapsedTime;
         let lapTime = "";
-        if(this.counter == 1) {
+        if (this.counter == 1) {
             lapTime = this.elapsedTime;
         } else {
             lapTime = this.prevLap - currTime;
@@ -277,18 +336,18 @@ class Timer extends HTMLElement {
     }
 }
 
-$( "#add-btn" ).click(function() {
-    var tot_timer = parseInt(localStorage.getItem("tot_timer"));
-    if(!tot_timer) tot_timer = 0;
+$("#add-btn").click(function () {
+    tot_timer = parseInt(localStorage.getItem("tot_timer"));
+    if (!tot_timer) tot_timer = 0;
     console.log(tot_timer);
-    var timer = new Timer({id: 'timer-' + tot_timer});
+    var timer = new Timer({ id: 'timer-' + tot_timer });
     timer.setAttribute('id', 'timer-' + tot_timer);
     document.getElementById('main-cont').appendChild(timer);
     localStorage.setItem("tot_timer", tot_timer + 1);
 });
 
-$( "#clear-btn" ).click(function() {
-    var tot_timer = parseInt(localStorage.getItem("tot_timer"));
+$("#clear-btn").click(function () {
+    tot_timer = parseInt(localStorage.getItem("tot_timer"));
     console.log(tot_timer);
     for (var i = 0; i < tot_timer; i++) {
         console.log("Nomor " + i);
@@ -296,5 +355,15 @@ $( "#clear-btn" ).click(function() {
         localStorage.clear();
     }
 });
+
+function waitFor(conditionFunction) {
+
+    const poll = resolve => {
+        if (conditionFunction()) resolve();
+        else setTimeout(_ => poll(resolve), 400);
+    }
+
+    return new Promise(poll);
+}
 
 window.customElements.define("the-timer", Timer)
