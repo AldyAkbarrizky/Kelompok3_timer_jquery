@@ -49,29 +49,17 @@ class Timer extends HTMLElement {
         this.counter = 1;
         this.prevLap = 0;
         this.state = "stopped";
+
+        console.log(localStorage.getItem("saveData-" + props.id));
+
         window.addEventListener("beforeunload", (event) => this.save(event));
-        this.load();
+        // this.load();
     }
 
     save(event) {
         event.preventDefault();
 
-        // localStorage.setItem("saveData-" + this.timerID, JSON.stringify({
-        //     id: this.timerID,
-        //     state: this.state,
-        //     savedTime: this.elapsedTime,
-        //     record: this.recordText.innerHTML,
-        //     timeClosed: Date.now(),
-        //     counter: this.counter,
-        //     prevLap: this.prevLap
-        // }));
-
-        // var formData = {
-        //     id: 3,
-        //     name: "Naufal Habib Hakim"
-        // }
-        var formData = {
-            timer_tot: timer_tot,
+        localStorage.setItem("saveData-" + this.timerID, JSON.stringify({
             id: this.timerID,
             state: this.state,
             savedTime: this.elapsedTime,
@@ -79,81 +67,69 @@ class Timer extends HTMLElement {
             timeClosed: Date.now(),
             counter: this.counter,
             prevLap: this.prevLap
-        }
+        }));
 
-        $.ajax({
-            type: "POST",
-            contentType: "application/json",
-            url: window.location + "add-timer",
-            data: JSON.stringify(formData),
-            dataType: 'json',
-            success: function (user) {
-                alert("Post Success!");
-            },
-            error: function (e) {
-                alert("Error!")
-            }
-        });
+        // var formData = {
+        //     id: 3,
+        //     name: "Naufal Habib Hakim"
+        // }
+        // var formData = {
+        //     timer_tot: timer_tot,
+        //     id: this.timerID,
+        //     state: this.state,
+        //     savedTime: this.elapsedTime,
+        //     record: this.recordText.innerHTML,
+        //     timeClosed: Date.now(),
+        //     counter: this.counter,
+        //     prevLap: this.prevLap
+        // }
+
+        // $.ajax({
+        //     type: "POST",
+        //     contentType: "application/json",
+        //     url: window.location + "add-timer",
+        //     data: JSON.stringify(formData),
+        //     dataType: 'json',
+        //     success: function (user) {
+        //         alert("Post Success!");
+        //     },
+        //     error: function (e) {
+        //         alert("Error!")
+        //     }
+        // });
 
         return;
     }
 
     load() {
-        var this_timer = this;
-        timer_tot = parseInt(localStorage.getItem("tot_timer"));
-        // if(tot_timer === null) {
-        //     tot_timer = 0;
-        //     localStorage.setItem("tot_timer", tot_timer);
-        // }
-        // var user = "Aldy";
-        var user = this.timerID;
-        $.get("timer", { user: user }, function (data, status) {
-
-            // alert("User Database: " + data)
-            var id = parseInt(user.charAt(6));
-            if (Array.isArray(data)) {
-                preload_data = data;
-                flag = true;
-            }
-
-            waitFor(_ => flag === true)
-                .then(_ => console.log("preload_data is ready"));
-
-            console.log(preload_data);
-            
-            //start load data
-            const loadData = preload_data[id];
-
+        if(this.timerID){
+            const loadData = JSON.parse(localStorage.getItem("saveData-"+ this.timerID));
             if (!loadData) return;
-
-            if (loadData.state === null) return;
-
-            this_timer.elapsedTime = parseInt(loadData.savedtime);
-
-            switch (loadData.state) {
+            this.elapsedTime = loadData.savedTime;
+            switch(loadData.state) {
                 case "started":
-                    this_timer.elapsedTime += (Date.now() - loadData.closedtime);
-                    this_timer.timerText.innerHTML = this_timer.timeToString(this_timer.elapsedTime);
-                    this_timer.recordText.innerHTML = loadData.lap_string;
-                    this_timer.counter = loadData.counter;
-                    this_timer.prevLap = loadData.prev_lap;
-                    this_timer.state = loadData.state;
-                    this_timer.start();
+                    this.elapsedTime += (Date.now() - loadData.timeClosed);
+                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
+                    this.recordText.innerHTML = loadData.record;
+                    this.counter = loadData.counter;
+                    this.prevLap = loadData.prevLap;
+                    this.state = loadData.state;
+                    this.start();
                     break
                 case "paused":
-                    this_timer.timerText.innerHTML = this_timer.timeToString(this_timer.elapsedTime);
-                    this_timer.recordText.innerHTML = loadData.lap_string;
-                    this_timer.counter = loadData.counter;
-                    this_timer.prevLap = loadData.prev_lap;
-                    this_timer.state = loadData.state;
-                    this_timer.pause();
+                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
+                    this.recordText.innerHTML = loadData.record;
+                    this.counter = loadData.counter;
+                    this.prevLap = loadData.prevLap;
+                    this.state = loadData.state;
+                    this.pause();
                     break
                 case "stopped":
-                    this_timer.timerText.innerHTML = this_timer.timeToString(this_timer.elapsedTime);
-                    this_timer.recordText.innerHTML = "Time <br/>";
+                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
+                    this.recordText.innerHTML = "Time <br/>";
                     break
             }
-        });
+        };
 
         // var formData = {
         //     id: 3,
@@ -175,37 +151,6 @@ class Timer extends HTMLElement {
         // 		console.log("ERROR: ", e);
         // 	}
         // });
-
-        // if (this.timerID) {
-        //     const loadData = JSON.parse(localStorage.getItem("saveData-" + this.timerID));
-        //     if (!loadData) return;
-
-        //     this.elapsedTime = loadData.savedTime;
-
-        //     switch (loadData.state) {
-        //         case "started":
-        //             this.elapsedTime += (Date.now() - loadData.timeClosed);
-        //             this.timerText.innerHTML = this.timeToString(this.elapsedTime);
-        //             this.recordText.innerHTML = loadData.record;
-        //             this.counter = loadData.counter;
-        //             this.prevLap = loadData.prevLap;
-        //             this.state = loadData.state;
-        //             this.start();
-        //             break
-        //         case "paused":
-        //             this.timerText.innerHTML = this.timeToString(this.elapsedTime);
-        //             this.recordText.innerHTML = loadData.record;
-        //             this.counter = loadData.counter;
-        //             this.prevLap = loadData.prevLap;
-        //             this.state = loadData.state;
-        //             this.pause();
-        //             break
-        //         case "stopped":
-        //             this.timerText.innerHTML = this.timeToString(this.elapsedTime);
-        //             this.recordText.innerHTML = "Time <br/>";
-        //             break
-        //     }
-        // }
     }
 
     timeToString(time) {
@@ -261,6 +206,7 @@ class Timer extends HTMLElement {
             this.recordText.innerHTML = "Time <br/>";
             this.prevLap = this.startTime;
         }
+        this.startTime = Date.now() - this.elapsedTime;
         this.timerInterval = setInterval(() => {
             this.elapsedTime = Date.now() - this.startTime;
             this.timerText.innerHTML = this.timeToString(this.elapsedTime);
