@@ -1,6 +1,4 @@
 var timer_tot;
-var timer_data;
-var preload_data;
 var flag = false;
 
 class Timer extends HTMLElement {
@@ -53,20 +51,20 @@ class Timer extends HTMLElement {
         console.log(localStorage.getItem("saveData-" + props.id));
 
         window.addEventListener("beforeunload", (event) => this.save(event));
-        // this.load();
+        this.load();
     }
 
     save(event) {
         event.preventDefault();
 
         localStorage.setItem("saveData-" + this.timerID, JSON.stringify({
-            id: this.timerID,
-            state: this.state,
-            savedTime: this.elapsedTime,
-            record: this.recordText.innerHTML,
-            timeClosed: Date.now(),
+            timer_id: this.timerID,
             counter: this.counter,
-            prevLap: this.prevLap
+            lap_string: this.recordText.innerHTML,
+            prev_lap: this.prevLap,
+            saved_time: this.elapsedTime,
+            time_closed: Date.now(),
+            state: this.state    
         }));
 
         // var formData = {
@@ -102,25 +100,25 @@ class Timer extends HTMLElement {
     }
 
     load() {
-        if(this.timerID){
-            const loadData = JSON.parse(localStorage.getItem("saveData-"+ this.timerID));
+        if (this.timerID) {
+            const loadData = JSON.parse(localStorage.getItem("saveData-" + this.timerID));
             if (!loadData) return;
-            this.elapsedTime = loadData.savedTime;
-            switch(loadData.state) {
+            this.elapsedTime = loadData.saved_time;
+            switch (loadData.state) {
                 case "started":
-                    this.elapsedTime += (Date.now() - loadData.timeClosed);
-                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
-                    this.recordText.innerHTML = loadData.record;
+                    this.elapsedTime += (Date.now() - loadData.time_closed);
+                    this.timerText.innerHTML = this.timeToString(this.elapsed_time);
+                    this.recordText.innerHTML = loadData.lap_string;
                     this.counter = loadData.counter;
-                    this.prevLap = loadData.prevLap;
+                    this.prevLap = loadData.prev_lap;
                     this.state = loadData.state;
                     this.start();
                     break
                 case "paused":
                     this.timerText.innerHTML = this.timeToString(this.elapsedTime);
-                    this.recordText.innerHTML = loadData.record;
+                    this.recordText.innerHTML = loadData.lap_string;
                     this.counter = loadData.counter;
-                    this.prevLap = loadData.prevLap;
+                    this.prevLap = loadData.prev_lap;
                     this.state = loadData.state;
                     this.pause();
                     break
@@ -281,58 +279,97 @@ class Timer extends HTMLElement {
 }
 
 $("#add-btn").click(function () {
-    $.get("count-timer", function (data, status) {
-        tot_timer = parseInt(data)
-        if (!tot_timer) tot_timer = 0;
+    // $.get("count-timer", function (data, status) {
+    //     tot_timer = parseInt(data)
+    //     if (!tot_timer) tot_timer = 0;
 
-        if (tot_timer === 3) {
-            alert("Timer sudah mencapai batas maksimum")
-        } else {
-            var timerData = {
-                timer_id: "timer-" + tot_timer
-            }
-            $.ajax({
-                type: "POST",
-                contentType: "application/json",
-                url: window.location + "new-timer",
-                data: JSON.stringify(timerData),
-                dataType: 'json',
-                success: function(data) {
-                    var timer = new Timer({ id: 'timer-' + tot_timer });
-                    timer.setAttribute('id', 'timer-' + tot_timer);
-                    $("#main-cont").append(timer);
-                },
-                error: function(e) {
-                    alert("Error!")
-                }
-            })
-        }
-    })
-    // tot_timer = parseInt(localStorage.getItem("tot_timer"));
-    // if (!tot_timer) tot_timer = 0;
-    // console.log(tot_timer);
-    // var timer = new Timer({ id: 'timer-' + tot_timer });
-    // timer.setAttribute('id', 'timer-' + tot_timer);
-    // document.getElementById('main-cont').appendChild(timer);
-    // localStorage.setItem("tot_timer", tot_timer + 1);
+    //     if (tot_timer === 3) {
+    //         alert("Timer sudah mencapai batas maksimum")
+    //     } else {
+    //         var timerData = {
+    //             timer_id: "timer-" + tot_timer
+    //         }
+    //         $.ajax({
+    //             type: "POST",
+    //             contentType: "application/json",
+    //             url: window.location + "new-timer",
+    //             data: JSON.stringify(timerData),
+    //             dataType: 'json',
+    //             success: function(data) {
+    //                 var timer = new Timer({ id: 'timer-' + tot_timer });
+    //                 timer.setAttribute('id', 'timer-' + tot_timer);
+    //                 $("#main-cont").append(timer);
+    //             },
+    //             error: function(e) {
+    //                 alert("Error!")
+    //             }
+    //         })
+    //     }
+    // })
+    tot_timer = parseInt(localStorage.getItem("tot_timer"));
+    if (!tot_timer) tot_timer = 0;
+    console.log(tot_timer);
+    var timer = new Timer({ id: 'timer-' + tot_timer });
+    timer.setAttribute('id', 'timer-' + tot_timer);
+    document.getElementById('main-cont').appendChild(timer);
+    localStorage.setItem("tot_timer", tot_timer + 1);
 });
 
 $("#clear-btn").click(function () {
-    $.get("count-timer", function (data, status) {
-        tot_timer = parseInt(data)
+    var tot_timer = parseInt(localStorage.getItem("tot_timer"));
+    var allTimer = getAllTimer();
 
-        $.ajax({
-            type: 'DELETE',
-            url: window.location + "delete-all",
-            success: function(data) {
-                for (var i = 0; i < tot_timer; i++) {
-                   //$('#timer-' + tot_timer).remove();
-                   document.getElementById('timer-' + i).remove();
-                }
-            }
-        })
-    })
+    $.ajax({
+        type: "POST",
+        contentType: "application/json",
+        url: window.location + "insert-all-timer",
+        data: JSON.stringify(allTimer),
+        dataType: 'json',
+        success: function (user) {
+            alert("Post Success!");
+            console.log(user)
+        },
+        error: function (e) {
+            alert("Error!")
+            console.log("ERROR: ", e);
+        }
+    });
+
+    console.log(tot_timer);
+    for (var i = 0; i < tot_timer; i++) {
+        console.log("Nomor " + i);
+        document.getElementById('timer-' + i).remove();
+        localStorage.clear();
+    }
 });
+
+function getTimerData(timer_id) {
+    var timer_data = document.getElementById(timer_id);
+    var values = {
+        timer_id: timer_data.timerID,
+        counter: timer_data.counter,
+        lap_string: timer_data.recordText.innerHTML,
+        prev_lap: timer_data.prevLap,
+        saved_time: timer_data.elapsedTime,
+        time_closed: Date.now(),
+        state: timer_data.state    
+    }
+
+    return values;
+}
+
+function getAllTimer() {
+    var tot_timer = parseInt(localStorage.getItem("tot_timer"));
+    var values = [];
+
+    for (var i = 0; i < tot_timer; i++) {
+        console.log("Nomor " + i);
+        timer_id = 'timer-' + i;
+        values.push(getTimerData(timer_id))
+    }
+
+    return values;
+}
 
 function waitFor(conditionFunction) {
 
