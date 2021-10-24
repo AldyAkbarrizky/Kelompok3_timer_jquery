@@ -107,7 +107,7 @@ class Timer extends HTMLElement {
             switch (loadData.state) {
                 case "started":
                     this.elapsedTime += (Date.now() - loadData.time_closed);
-                    this.timerText.innerHTML = this.timeToString(this.elapsed_time);
+                    this.timerText.innerHTML = this.timeToString(this.elapsedTime);
                     this.recordText.innerHTML = loadData.lap_string;
                     this.counter = loadData.counter;
                     this.prevLap = loadData.prev_lap;
@@ -128,27 +128,6 @@ class Timer extends HTMLElement {
                     break
             }
         };
-
-        // var formData = {
-        //     id: 3,
-        //     name: "Naufal Habib Hakim"
-        // }
-
-        // $.ajax({
-        //     type: "POST",
-        //     contentType: "application/json",
-        //     url: window.location + "add-timer",
-        //     data: JSON.stringify(formData),
-        //     dataType: 'json',
-        //     success: function(user) {
-        //         alert("Post Success!");
-        //         console.log(user)
-        //     },
-        //     error: function(e) {
-        // 		alert("Error!")
-        // 		console.log("ERROR: ", e);
-        // 	}
-        // });
     }
 
     timeToString(time) {
